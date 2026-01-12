@@ -1,284 +1,141 @@
-/* ১. গ্লোবাল ভেরিয়েবল এবং রিসেট */
-:root {
-    --primary-navy: #1a2a3a;
-    --accent-gold: #c5a059;
-    --bg-light: #f4f7f6;
-    --white: #ffffff;
-    --text-dark: #2d3436;
-    --text-gray: #636e72;
-    --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-    --card-radius: 20px;
-}
-
+/* ১. জেনারেল রিসেট এবং ফন্ট */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 body {
-    background-color: #e0e0e0; /* ডেক্সটপে দেখার জন্য ব্যাকগ্রাউন্ড */
-    font-family: 'Poppins', sans-serif;
-    color: var(--text-dark);
-    display: flex;
-    justify-content: center;
+    background-color: #f4f7f6;
+    color: #333;
+    line-height: 1.6;
 }
 
-/* ২. অ্যাপ কন্টেইনার (মোবাইল ভিউ) */
-.app-shell {
-    width: 100%;
-    max-width: 430px; /* iPhone 14/15 Pro Max সাইজ */
-    min-height: 100vh;
-    background-color: var(--bg-light);
-    position: relative;
-    overflow-x: hidden;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 0 100px rgba(0,0,0,0.2);
-}
-
-/* ৩. হেডার ডিজাইন */
-.main-nav {
-    background-color: var(--primary-navy);
-    padding: 40px 20px 30px;
-    border-radius: 0 0 35px 35px;
-    color: var(--white);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-}
-
-.header-content {
+/* ২. হেডার (Navigation) */
+header {
+    background-color: #fff;
+    padding: 15px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 25px;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
-.brand-identity {
-    text-align: center;
+.logo {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #ff4757;
 }
 
-.logo-symbol {
-    font-family: 'Playfair Display', serif;
-    font-size: 28px;
-    color: var(--accent-gold);
-    line-height: 1;
-    font-weight: 700;
-}
-
-.brand-name {
-    font-size: 16px;
-    font-weight: 400;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    margin-top: 5px;
-}
-
-.menu-trigger, .action-btn {
+#menu-btn {
     background: none;
     border: none;
-    color: var(--white);
-    font-size: 22px;
+    font-size: 1.5rem;
     cursor: pointer;
 }
 
-.cart-wrapper {
-    position: relative;
-}
-
-.cart-badge {
-    position: absolute;
-    top: -8px;
-    right: -10px;
-    background: var(--accent-gold);
-    color: var(--primary-navy);
-    font-size: 10px;
-    font-weight: 700;
-    padding: 3px 7px;
-    border-radius: 50%;
-}
-
-/* ৪. সার্চ বার */
-.search-wrapper {
-    background: var(--white);
-    display: flex;
-    align-items: center;
-    padding: 12px 18px;
-    border-radius: 15px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-}
-
-.search-icon { color: #b2bec3; margin-right: 12px; }
-
-.search-input {
-    border: none;
-    outline: none;
-    width: 100%;
-    font-size: 14px;
-    color: var(--text-dark);
-}
-
-.filter-btn {
-    background: none;
-    border: none;
-    color: var(--primary-navy);
-    font-size: 18px;
-    border-left: 1px solid #eee;
-    padding-left: 12px;
-}
-
-/* ৫. ট্যাব সেকশন */
-.tabs-section {
-    padding: 25px 0 15px 20px;
-}
-
-.tab-scroll {
-    display: flex;
-    gap: 12px;
-    overflow-x: auto;
-    padding-right: 20px;
-}
-
-.tab-scroll::-webkit-scrollbar { display: none; }
-
-.chip {
-    padding: 10px 25px;
-    background: var(--white);
-    border: none;
-    border-radius: 12px;
-    font-weight: 600;
-    font-size: 13px;
-    color: var(--text-gray);
-    white-space: nowrap;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.03);
-    transition: 0.3s;
-}
-
-.chip.active {
-    background: var(--primary-navy);
-    color: var(--white);
-}
-
-/* ৬. প্রোডাক্ট গ্রিড */
-.product-showcase {
-    padding: 0 20px 100px;
-}
-
-.section-title {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+/* ৩. হিরো সেকশন (Featured Post) */
+.hero-post {
+    background-color: #fff;
     margin-bottom: 20px;
 }
 
-.section-title h2 { font-size: 18px; font-weight: 700; }
-.see-all { color: var(--accent-gold); text-decoration: none; font-size: 13px; font-weight: 600; }
-
-.product-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 18px;
-}
-
-.product-card {
-    background: var(--white);
-    border-radius: var(--card-radius);
-    padding: 10px;
-    box-shadow: var(--shadow);
-    transition: transform 0.3s ease;
-}
-
-.product-card:active { transform: scale(0.96); }
-
-.image-holder {
-    height: 190px;
-    background: #f0f0f0;
-    border-radius: 15px;
-    overflow: hidden;
-    position: relative;
-}
-
-.image-holder img {
+.hero-image img {
     width: 100%;
-    height: 100%;
+    height: 250px;
     object-fit: cover;
 }
 
-.wishlist-icon {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: rgba(255,255,255,0.8);
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    font-size: 14px;
-    color: var(--text-gray);
+.hero-content {
+    padding: 20px;
 }
 
-.wishlist-icon.active { color: #ff7675; }
-
-.product-info { padding: 12px 5px; }
-.category-name { font-size: 10px; color: var(--text-gray); text-transform: uppercase; margin-bottom: 5px; }
-.product-title { font-size: 13px; font-weight: 600; height: 38px; line-height: 1.4; margin-bottom: 8px; }
-
-.footer-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.price { font-weight: 700; font-size: 16px; color: var(--primary-navy); }
-
-.add-to-cart {
-    background: var(--primary-navy);
-    color: var(--white);
-    border: none;
-    padding: 6px 15px;
-    border-radius: 8px;
+.category {
+    background: #ff4757;
+    color: #fff;
+    padding: 4px 10px;
     font-size: 12px;
-    font-weight: 600;
+    border-radius: 5px;
+    text-transform: uppercase;
 }
 
-/* ৭. বটম নেভিগেশন */
-.bottom-navigation {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: calc(100% - 40px);
-    max-width: 390px;
-    background: rgba(26, 42, 58, 0.95);
-    backdrop-filter: blur(10px);
-    border-radius: 25px;
-    padding: 12px 10px;
-    box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+.hero-content h1 {
+    font-size: 1.5rem;
+    margin: 10px 0;
 }
 
-.nav-menu {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
+.read-more {
+    background: #2f3542;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    margin-top: 15px;
 }
 
-.nav-item {
-    text-decoration: none;
-    color: rgba(255,255,255,0.5);
+/* ৪. মেইন কন্টেইনার ও কার্ডস */
+.container {
+    padding: 0 15px;
+}
+
+.container h2 {
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+}
+
+.blog-grid {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    transition: 0.3s;
+    gap: 15px;
 }
 
-.nav-item i { font-size: 20px; }
-.nav-item span { font-size: 10px; font-weight: 500; }
-
-.nav-item.active {
-    color: var(--accent-gold);
+.blog-card {
+    background: #fff;
+    display: flex; /* ইমেজ পাশে রাখার জন্য */
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
+
+.blog-card img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+}
+
+.card-info {
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.card-info h3 {
+    font-size: 1rem;
+    margin-bottom: 5px;
+}
+
+.card-info p {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+.date {
+    font-size: 11px;
+    color: #999;
+}
+
+/* ৫. ফুটার */
+footer {
+    text-align: center;
+    padding: 30px 10px;
+    margin-top: 20px;
+    background: #fff;
+    font-size: 12px;
+    color: #777;
+    }
