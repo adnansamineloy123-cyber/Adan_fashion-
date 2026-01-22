@@ -27,7 +27,6 @@
         .scan-bar { position: absolute; width: 100%; height: 2px; background: var(--sub-glow); opacity: 0.3; top: 0; animation: scan 4s linear infinite; }
         @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
         .hidden { display: none; }
-        /* নতুন মেসেজ স্টাইল */
         #status-msg { margin-top: 15px; font-size: 12px; text-align: center; color: var(--glow); }
     </style>
 </head>
@@ -80,14 +79,13 @@
             document.getElementById('status-msg').innerText = "";
         }
 
-        // লগইন লজিক
+        // --- লগইন লজিক ---
         document.getElementById('login-btn').addEventListener('click', async () => {
             const id = document.getElementById('login-uid').value;
             const pin = document.getElementById('login-pass').value;
             const msg = document.getElementById('status-msg');
 
             if(!id || !pin) return msg.innerText = "ERROR: EMPTY FIELDS";
-            
             msg.innerText = "AUTHENTICATING...";
             
             try {
@@ -101,7 +99,8 @@
                 if(data.success) {
                     msg.style.color = "var(--sub-glow)";
                     msg.innerText = "ACCESS GRANTED. REDIRECTING...";
-                    localStorage.setItem('user_token', data.token); // সেশন টোকেন সেভ করা
+                    localStorage.setItem('user_token', data.token);
+                    // এখানে ফাইলের নাম home.html রাখা হয়েছে
                     setTimeout(() => window.location.href = "home.html", 1000);
                 } else {
                     msg.innerText = "DENIED: " + data.message;
@@ -111,8 +110,33 @@
             }
         });
 
-        // এখানে রেজিস্ট্রেশন লজিকও একইভাবে সার্ভারের সাথে যুক্ত হবে
+        // --- রেজিস্ট্রেশন লজিক ---
+        document.getElementById('reg-btn').addEventListener('click', async () => {
+            const name = document.getElementById('reg-name').value;
+            const id = document.getElementById('reg-uid').value;
+            const pin = document.getElementById('reg-pass').value;
+            const msg = document.getElementById('status-msg');
+
+            if(!name || !id || !pin) return alert("সবগুলো ঘর পূরণ করুন!");
+            
+            try {
+                const response = await fetch('/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, id, pin })
+                });
+                const data = await response.json();
+                if(data.success) {
+                    alert("REGISTRATION SUCCESSFUL! PLEASE LOGIN.");
+                    toggle(); 
+                } else {
+                    alert("FAILED: " + data.message);
+                }
+            } catch (err) {
+                alert("SERVER ERROR");
+            }
+        });
     </script>
 </body>
-              </html>
-                
+    </html>
+                                                                                
