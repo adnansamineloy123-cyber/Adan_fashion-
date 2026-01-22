@@ -1,13 +1,12 @@
 const express = require('express');
 const axios = require('axios');
-const path = require('path');
 const cors = require('cors');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// API URL (SheetDB)
+// আপনার গুগল শিট API (SheetDB)
 const SHEETDB_URL = "https://sheetdb.io/api/v1/goe1q7f0ma6g5";
 
 // লগইন রুট
@@ -27,7 +26,7 @@ app.post('/auth/login', async (req, res) => {
             res.status(401).json({ success: false, message: "Invalid ID/PIN" });
         }
     } catch (e) { 
-        res.status(500).json({ success: false }); 
+        res.status(500).json({ success: false, message: "Server Error" }); 
     }
 });
 
@@ -59,11 +58,10 @@ app.get('/auth/user-data', async (req, res) => {
     }
 });
 
-// লোকাল হোস্টে চালানোর জন্য
+// লোকাল হোস্টে টেস্ট করার জন্য (Vercel এটি অটো হ্যান্ডেল করবে)
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
 
 module.exports = app;
-                                  
