@@ -82,3 +82,83 @@ app.listen(PORT, () => console.log(`SYSTEM LIVE ON PORT ${PORT}`));
     }
 });
             
+const express = require('express');
+const axios = require('axios');
+const path = require('path');
+require('dotenv').config();
+
+const app = express();
+app.use(express.json());
+app.use(express.static('public')); // public ফোল্ডারের ফাইলগুলো সার্ভ করবে
+
+const SHEETDB_URL = process.env.SHEETDB_URL;
+
+// --- ১. লগইন রুট ---
+app.post('/auth/login', async (req, res) => {
+    const { id, pin } = req.body;
+    try {
+        const response = await axios.get(`${SHEETDB_URL}/search?Game_ID=${id}`);
+        const user = response.data[0];
+
+        if (user && user.PIN === pin) {
+            res.json({ 
+                success: true, 
+                token: Buffer.from(id).toString('base64'), // আইডি এনকোড করে টোকেন বানানো
+                name: user.Name,
+                coins: user.Coins
+            });
+        } else {
+            res.status(401).json({ success: false, message: "অ্যাক্সেস ডিনাইড: ভুল আইডি বা পিন" });
+        }
+    } catch (error) {
+        res.status(500).json({ success: false, message: "সার্ভার কানেকশন এরর" });
+    }
+});
+
+// --- ২. হোমপেজের ডাটা লোড করার রুট ---
+app.get('/auth/user-data', async (req, res) => {
+    const userId = req.query.id;
+    try {
+        const response = await axios.get(`${SHEETDB_URL}/search?Game_ID=${userId}`);
+        const user = response.data[0];
+        if(user) {
+            res.json({ success: true, name: user.Name, coins: user.Coins });
+        } else {
+            res.json({ success: false });
+        }
+    } catch (e) {
+        res.status(500).json({ success: false });
+    }
+});
+
+// --- ৩. টুর্নামেন্ট জয়েনিং (টাকা কাটার লজিক) ---
+app.post('/tournament/join', async (req, res) => {
+    const { userId, entryFee } = req.body;
+    try {
+        // শিট থেকে সরাসরি ভেরিফাই করা (সিকিউরিটি)
+        const userFetch = await axios.get(`${SHEETDB_URL}/search?Game_ID=${userId}`);
+        const user = userFetch.data[0];
+
+        if (!user) return res.json({ success: false, message: "ইউজার পাওয়া যায়নি" });
+
+        const currentCoins = parseInt(user.Coins);
+        const fee = parseInt(entryFee);
+
+        if (currentCoins >= fee) {
+            const newBalance = currentCoins - fee;
+            // শিটে নতুন ব্যালেন্স আপডেট
+            await axios.put(`${SHEETDB_URL}/Game_ID/${userId}`, {
+                data: { "Coins": newBalance }
+            });
+            res.json({ success: true, newBalance: newBalance });
+        } else {
+            res.json({ success: false, message: "পর্যাপ্ত কয়েন নেই!" });
+        }
+    } catch (error) {
+        res.status(500).json({ success: false, message: "ট্রানজেকশন ব্যর্থ হয়েছে" });
+    }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`SYSTEM ONLINE: PORT ${PORT}`));
+    
