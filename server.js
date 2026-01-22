@@ -1,164 +1,82 @@
 const express = require('express');
 const axios = require('axios');
 const path = require('path');
-require('dotenv').config(); // API লিঙ্ক নিরাপদ রাখার জন্য
-
-const app = express();
-app.use(express.json());
-app.use(express.static('public')); // আপনার HTML ফাইলগুলো 'public' ফোল্ডারে থাকবে
-
-// --- কনফিগারেশন (গোপন রাখা হবে) ---
-const SHEETDB_URL = process.env.SHEETDB_URL || "https://sheetdb.io/api/v1/goe1q7f0ma6g5";
-
-// ১. লগইন লজিক (নিরাপদ যাচাইকরণ)
-app.post('/auth/login', async (req, res) => {
-    const { id, pin } = req.body;
-
-    try {
-        const response = await axios.get(`${SHEETDB_URL}/search?Game_ID=${id}`);
-        const user = response.data[0];
-
-        if (user && user.PIN === pin) {
-            // সফল লগইন - পাসওয়ার্ড ছাড়া বাকি ডাটা পাঠানো
-            res.json({ 
-                success: true, 
-                token: Buffer.from(id).toString('base64'), // সিম্পল সিকিউরিটি টোকেন
-                name: user.Name,
-                coins: user.Coins
-            });
-        } else {
-            res.status(401).json({ success: false, message: "INVALID CREDENTIALS" });
-        }
-    } catch (error) {
-        res.status(500).json({ success: false, message: "SERVER ERROR" });
-    }
-});
-
-// ২. টুর্নামেন্ট জয়েন লজিক (টাকা-পয়সার নিরাপত্তা এখানেই)
-app.post('/tournament/join', async (req, res) => {
-    const { userId, entryFee, matchId } = req.body;
-
-    try {
-        // ধাপ ১: শিট থেকে ইউজারের লেটেস্ট কয়েন চেক করা (হ্যাক প্রুফ)
-        const userFetch = await axios.get(`${SHEETDB_URL}/search?Game_ID=${userId}`);
-        const user = userFetch.data[0];
-
-        if (!user) return res.json({ success: false, message: "USER NOT FOUND" });
-
-        const currentCoins = parseInt(user.Coins);
-        const fee = parseInt(entryFee);
-
-        // ধাপ ২: ব্যালেন্স চেক
-        if (currentCoins >= fee) {
-            const newBalance = currentCoins - fee;
-
-            // ধাপ ৩: শিটে ব্যালেন্স আপডেট করা
-            await axios.put(`${SHEETDB_URL}/Game_ID/${userId}`, {
-                data: { "Coins": newBalance }
-            });
-
-            // ধাপ ৪: ট্রানজেকশন রেকর্ড করা (ঐচ্ছিক)
-            // আপনি চাইলে matches বা orders শিটেও ডাটা পাঠাতে পারেন
-
-            res.json({ success: true, newBalance: newBalance });
-        } else {
-            res.json({ success: false, message: "INSUFFICIENT COINS" });
-        }
-    } catch (error) {
-        res.status(500).json({ success: false, message: "TRANSACTION FAILED" });
-    }
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`SYSTEM LIVE ON PORT ${PORT}`));
- app.get('/auth/user-data', async (req, res) => {
-    const userId = req.query.id;
-    try {
-        const response = await axios.get(`${SHEETDB_URL}/search?Game_ID=${userId}`);
-        const user = response.data[0];
-        res.json({ success: true, name: user.Name, coins: user.Coins });
-    } catch (e) {
-        res.json({ success: false });
-    }
-});
-            
-const express = require('express');
-const axios = require('axios');
-const path = require('path');
 require('dotenv').config();
 
 const app = express();
 app.use(express.json());
-app.use(express.static('public')); // public ফোল্ডারের ফাইলগুলো সার্ভ করবে
 
-const SHEETDB_URL = process.env.SHEETDB_URL;
+// public ফোল্ডারের ফাইলগুলো (HTML/CSS) ব্রাউজারে দেখানোর জন্য
+app.use(express.static(path.join(__dirname, 'public')));
 
-// --- ১. লগইন রুট ---
+// গুগল শিট API লিঙ্ক (Vercel Environment Variable থেকে নিবে)
+const SHEETDB_URL = process.env.SHEETDB_URL || "https://sheetdb.io/api/v1/goe1q7f0ma6g5";
+
+// --- ১. লগইন লজিক ---
 app.post('/auth/login', async (req, res) => {
     const { id, pin } = req.body;
     try {
         const response = await axios.get(`${SHEETDB_URL}/search?Game_ID=${id}`);
         const user = response.data[0];
 
-        if (user && user.PIN === pin) {
+        if (user && user.PIN.toString() === pin.toString()) {
             res.json({ 
                 success: true, 
-                token: Buffer.from(id).toString('base64'), // আইডি এনকোড করে টোকেন বানানো
+                token: Buffer.from(id).toString('base64'), 
                 name: user.Name,
                 coins: user.Coins
             });
         } else {
-            res.status(401).json({ success: false, message: "অ্যাক্সেস ডিনাইড: ভুল আইডি বা পিন" });
+            res.status(401).json({ success: false, message: "ভুল আইডি বা পিন!" });
         }
     } catch (error) {
-        res.status(500).json({ success: false, message: "সার্ভার কানেকশন এরর" });
+        res.status(500).json({ success: false, message: "সার্ভার এরর" });
     }
 });
 
-// --- ২. হোমপেজের ডাটা লোড করার রুট ---
+// --- ২. হোমপেজের প্রোফাইল ডাটা লোড ---
 app.get('/auth/user-data', async (req, res) => {
-    const userId = req.query.id;
     try {
+        const userId = Buffer.from(req.query.id, 'base64').toString('ascii');
         const response = await axios.get(`${SHEETDB_URL}/search?Game_ID=${userId}`);
         const user = response.data[0];
-        if(user) {
+        if (user) {
             res.json({ success: true, name: user.Name, coins: user.Coins });
         } else {
-            res.json({ success: false });
+            res.status(404).json({ success: false });
         }
     } catch (e) {
         res.status(500).json({ success: false });
     }
 });
 
-// --- ৩. টুর্নামেন্ট জয়েনিং (টাকা কাটার লজিক) ---
+// --- ৩. টুর্নামেন্ট জয়েনিং (নিরাপদ ট্রানজেকশন) ---
 app.post('/tournament/join', async (req, res) => {
     const { userId, entryFee } = req.body;
     try {
-        // শিট থেকে সরাসরি ভেরিফাই করা (সিকিউরিটি)
-        const userFetch = await axios.get(`${SHEETDB_URL}/search?Game_ID=${userId}`);
-        const user = userFetch.data[0];
+        const response = await axios.get(`${SHEETDB_URL}/search?Game_ID=${userId}`);
+        const user = response.data[0];
 
-        if (!user) return res.json({ success: false, message: "ইউজার পাওয়া যায়নি" });
-
-        const currentCoins = parseInt(user.Coins);
-        const fee = parseInt(entryFee);
-
-        if (currentCoins >= fee) {
-            const newBalance = currentCoins - fee;
-            // শিটে নতুন ব্যালেন্স আপডেট
+        if (user && parseInt(user.Coins) >= parseInt(entryFee)) {
+            const newBalance = parseInt(user.Coins) - parseInt(entryFee);
+            
+            // শিটে কয়েন আপডেট করা
             await axios.put(`${SHEETDB_URL}/Game_ID/${userId}`, {
                 data: { "Coins": newBalance }
             });
-            res.json({ success: true, newBalance: newBalance });
+            res.json({ success: true, newBalance });
         } else {
             res.json({ success: false, message: "পর্যাপ্ত কয়েন নেই!" });
         }
     } catch (error) {
-        res.status(500).json({ success: false, message: "ট্রানজেকশন ব্যর্থ হয়েছে" });
+        res.status(500).json({ success: false });
     }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`SYSTEM ONLINE: PORT ${PORT}`));
-    
+// --- ৪. ডিফল্ট রুট (সবশেষে থাকবে) ---
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Vercel এর জন্য এক্সপোর্ট
+module.exports = app;
