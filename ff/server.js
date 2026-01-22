@@ -71,4 +71,14 @@ app.post('/tournament/join', async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`SYSTEM LIVE ON PORT ${PORT}`));
-                                  
+ app.get('/auth/user-data', async (req, res) => {
+    const userId = req.query.id;
+    try {
+        const response = await axios.get(`${SHEETDB_URL}/search?Game_ID=${userId}`);
+        const user = response.data[0];
+        res.json({ success: true, name: user.Name, coins: user.Coins });
+    } catch (e) {
+        res.json({ success: false });
+    }
+});
+            
