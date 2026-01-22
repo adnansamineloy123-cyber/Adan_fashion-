@@ -1,0 +1,78 @@
+<script>
+    // ১. পেজ লোড হওয়ার সাথে সাথে ইউজারের ডাটা নিয়ে আসা
+    window.onload = async function() {
+        const token = localStorage.getItem('user_token');
+        if (!token) {
+            window.location.href = "index.html"; // লগইন না থাকলে ফেরত পাঠানো
+            return;
+        }
+
+        // টোকেন থেকে আইডি বের করা (Base64 decode)
+        const userId = atob(token);
+
+        try {
+            // সার্ভার থেকে ইউজারের লেটেস্ট তথ্য আনা
+            const response = await fetch(`/auth/user-data?id=${userId}`);
+            const data = await response.json();
+
+            if(data.success) {
+                // ডিজাইন পরিবর্তন না করে শুধু টেক্সট আপডেট
+                document.querySelector('.profile-box span').innerText = "@" + data.name;
+                document.querySelector('.coin-balance').innerText = data.coins + " 🪙";
+            }
+        } catch (err) {
+            console.log("Error fetching data");
+        }
+    };
+
+    // ২. নেভিগেশন ফাংশন (আগের মতোই)
+    function navigate(id, el) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        el.classList.add('active');
+    }
+
+    // ৩. টুর্নামেন্টে জয়েন করার নিরাপদ ফাংশন
+    async function joinTournament(matchId, entryFee) {
+        const token = localStorage.getItem('user_token');
+        const userId = atob(token);
+        
+        // কনফার্মেশন প্রম্পট
+        if(!confirm(`Do you want to join for ${entryFee} coins?`)) return;
+
+        try {
+            const response = await fetch('/tournament/join', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, entryFee, matchId })
+            });
+
+            const result = await response.json();
+
+            if(result.success) {
+                // কয়েন আপডেট করা
+                document.querySelector('.coin-balance').innerText = result.newBalance + " 🪙";
+                
+                // আপনার সেই চমৎকার সেলিব্রেশন ইফেক্ট
+                celebrate(); 
+                alert("SUCCESS! MISSION DEPLOYED.");
+            } else {
+                alert("ERROR: " + result.message);
+            }
+        } catch (err) {
+            alert("SYSTEM ERROR: UNABLE TO JOIN");
+        }
+    }
+
+    // ৪. সেলিব্রেশন (আপনার অরিজিনাল কোড)
+    function celebrate() {
+        confetti({
+            particleCount: 150,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ['#00f3ff', '#bc13fe', '#ffffff']
+        });
+    }
+              </script>
+              
