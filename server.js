@@ -80,3 +80,21 @@ app.get('*', (req, res) => {
 
 // Vercel এর জন্য এক্সপোর্ট
 module.exports = app;
+// --- নতুন রেজিস্ট্রেশন রুট (server.js এ যোগ করুন) ---
+app.post('/auth/register', async (req, res) => {
+    const { name, id, pin } = req.body;
+    try {
+        // নতুন ডাটা গুগল শিটে পাঠানো
+        await axios.post(SHEETDB_URL, {
+            data: [{
+                "Name": name,
+                "Game_ID": id,
+                "PIN": pin,
+                "Coins": 0 // নতুন ইউজারের জন্য ০ কয়েন
+            }]
+        });
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "রেজিস্ট্রেশন ব্যর্থ হয়েছে" });
+    }
+});
