@@ -1,13 +1,7 @@
 {
   "version": 2,
   "rewrites": [
-    {
-      "source": "/auth/(.*)",
-      "destination": "/server.js"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/public/$1"
-    }
+    { "source": "/auth/(.*)", "destination": "/server.js" },
+    { "source": "/(.*)", "destination": "/public/$1" }
   ]
 }
