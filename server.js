@@ -4,27 +4,18 @@ const cors = require('cors');
 const path = require('path');
 
 const app = express();
-
-// মিডলওয়্যার কনফিগারেশন
 app.use(cors());
 app.use(express.json());
-// পাবলিক ফোল্ডারের ফাইলগুলো পড়ার জন্য
 app.use(express.static(path.join(__dirname, 'public')));
 
-// আপনার গুগল শিট API (SheetDB) URL
 const SHEETDB_URL = "https://sheetdb.io/api/v1/goe1q7f0ma6g5";
 
-// লগইন রুট
+// লগইন এপিআই
 app.post('/auth/login', async (req, res) => {
     const { id, pin } = req.body;
-    if (!id || !pin) {
-        return res.status(400).json({ success: false, message: "ID and PIN required" });
-    }
-
     try {
         const response = await axios.get(`${SHEETDB_URL}/search?Game_ID=${id}`);
         const user = response.data[0];
-
         if (user && user.PIN.toString() === pin.toString()) {
             res.json({ 
                 success: true, 
@@ -33,64 +24,24 @@ app.post('/auth/login', async (req, res) => {
                 coins: user.Coins 
             });
         } else {
-            res.status(401).json({ success: false, message: "Invalid ID/PIN" });
+            res.status(401).json({ success: false, message: "ID বা PIN ভুল!" });
         }
-    } catch (e) { 
-        console.error("Login Error:", e.message);
-        res.status(500).json({ success: false, message: "Server Error" }); 
-    }
+    } catch (e) { res.status(500).json({ success: false, message: "সার্ভার এরর!" }); }
 });
 
-// রেজিস্ট্রেশন রুট
-app.post('/auth/register', async (req, res) => {
-    const { name, id, pin } = req.body;
-    if (!name || !id || !pin) {
-        return res.status(400).json({ success: false, message: "All fields are required" });
-    }
-
-    try {
-        await axios.post(SHEETDB_URL, { 
-            data: [{"Name": name, "Game_ID": id, "PIN": pin, "Coins": 0}] 
-        });
-        res.json({ success: true });
-    } catch (e) { 
-        console.error("Registration Error:", e.message);
-        res.status(500).json({ success: false, message: "Failed to register" }); 
-    }
-});
-
-// ইউজার ডাটা রুট (হোম পেজে ডাটা দেখানোর জন্য)
+// হোম পেজের জন্য ইউজার ডাটা এপিআই
 app.get('/auth/user-data', async (req, res) => {
     try {
-        const authHeader = req.query.id;
-        if (!authHeader) return res.status(400).json({ success: false });
-
-        const userId = Buffer.from(authHeader, 'base64').toString('ascii');
+        const token = req.query.id;
+        if (!token) return res.status(400).json({ success: false });
+        const userId = Buffer.from(token, 'base64').toString('ascii');
         const response = await axios.get(`${SHEETDB_URL}/search?Game_ID=${userId}`);
-        
-        if (response.data && response.data[0]) {
-            res.json({ 
-                success: true, 
-                name: response.data[0].Name, 
-                coins: response.data[0].Coins 
-            });
-        } else {
-            res.status(404).json({ success: false, message: "User not found" });
-        }
-    } catch (e) { 
-        res.status(500).json({ success: false }); 
-    }
-});
-
-// ডিফল্টভাবে ইনডেক্স ফাইল পাঠানো
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+        if (response.data[0]) {
+            res.json({ success: true, name: response.data[0].Name, coins: response.data[0].Coins });
+        } else { res.status(404).json({ success: false }); }
+    } catch (e) { res.status(500).json({ success: false }); }
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});
-
+app.listen(PORT, () => console.log(`Server is running!`));
 module.exports = app;
-                
